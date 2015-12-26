@@ -116,45 +116,46 @@ function getHelp(args, obj) {
 }
 
 /* Commands */
-function evaluate(input, success, error) {
+function evaluate(input) {
   var reply = [];
   // Evaluate input
-  reply.push(eval(input.processText(input, success, error)).toString());
+  var f = new Function(input.processText(input));
+  reply.push(f().toString());
   if (reply.length)
     return reply;
 }
 
-function sayRaw(input, success, error) {
+function sayRaw(input) {
   var reply = [];
   reply.push(input.args.join(' '));
   if (reply.length)
     return reply;
 }
 
-function say(input, success, error) {
+function say(input) {
   var reply = [];
-  reply.push(input.processText(input, success, error));
+  reply.push(input.processText(input));
   if (reply.length)
     return reply;
 }
 
-function getSource(input, success, error) {
+function getSource(input) {
   var reply = [];
   if (args.length)
   // Link to a file
-    reply.push('https://github.com/SecretOnline/NMS-irc-bot/blob/master/' + input.processText(input, success, error));
+    reply.push('https://github.com/SecretOnline/NMS-irc-bot/blob/master/' + input.processText(input));
   else
   // Link to main page
-    reply.push('https://github.com/SecretOnline/NMS-irc-bot/ ' + input.processText(input, success, error));
+    reply.push('https://github.com/SecretOnline/NMS-irc-bot/ ' + input.processText(input));
   if (reply.length)
     return reply;
 }
 
-function getWikiLink(input, success, error) {
+function getWikiLink(input) {
   var reply = [];
   var url = 'https://en.wikipedia.org/wiki/';
   if (args.length > 0)
-    url += toTitleCase(input.processText(input, success, error));
+    url += toTitleCase(input.processText(input));
   else
     url += 'Main_Page';
   url = url.replace(/ /g, '_');
@@ -165,11 +166,11 @@ function getWikiLink(input, success, error) {
     return reply;
 }
 
-function getYtLink(input, success, error) {
+function getYtLink(input) {
   var reply = [];
   var url = 'https://www.youtube.com/';
   if (args.length > 0)
-    url += 'results?search_query=' + input.processText(input, success, error);
+    url += 'results?search_query=' + input.processText(input);
   url = url.replace(/ /g, '+');
   url = encodeURI(url);
   url = url.replace(/'/g, '%27');
@@ -178,11 +179,11 @@ function getYtLink(input, success, error) {
     return reply;
 }
 
-function getGoogleLink(input, success, error) {
+function getGoogleLink(input) {
   var reply = [];
   var url = 'https://www.google.com/';
   if (args.length > 0)
-    url += 'search?q=' + input.processText(input, success, error);
+    url += 'search?q=' + input.processText(input);
   url = url.replace(/ /g, '+');
   url = encodeURI(url);
   url = url.replace(/'/g, '%27');
@@ -191,11 +192,11 @@ function getGoogleLink(input, success, error) {
     return reply;
 }
 
-function getLmgtfyLink(input, success, error) {
+function getLmgtfyLink(input) {
   var reply = [];
   var url = 'http://lmgtfy.com/';
   if (args.length > 0)
-    url += '?q=' + input.processText(input, success, error);
+    url += '?q=' + input.processText(input);
   url = url.replace(/ /g, '+');
   url = encodeURI(url);
   url = url.replace(/'/g, '%27');
@@ -204,11 +205,11 @@ function getLmgtfyLink(input, success, error) {
     return reply;
 }
 
-function getSearchLink(input, success, error) {
+function getSearchLink(input) {
   var reply = [];
   var url = 'https://www.reddit.com/r/NoMansSkyTheGame/';
   if (args.length > 0)
-    url += 'search?sort=new&restrict_sr=on&t=all&q=' + input.processText(input, success, error);
+    url += 'search?sort=new&restrict_sr=on&t=all&q=' + input.processText(input);
   url = url.replace(/ /g, '+');
   url = encodeURI(url);
   url = url.replace(/'/g, '%27');
@@ -217,11 +218,11 @@ function getSearchLink(input, success, error) {
     return reply;
 }
 
-function getInfoLink(input, success, error) {
+function getInfoLink(input) {
   var reply = [];
   var url = 'http://secretonline.github.io/NMS-Info/';
   if (args.length > 0)
-    url += '?search=' + input.processText(input, success, error);
+    url += '?search=' + input.processText(input);
   url = url.replace(/ /g, '+');
   url = encodeURI(url);
   url = url.replace(/'/g, '%27');
@@ -230,13 +231,13 @@ function getInfoLink(input, success, error) {
     return reply;
 }
 
-function getRelease(input, success, error) {
+function getRelease(input) {
   var reply = [];
 
   var result = 'June™';
 
   if (args.length) {
-    reply.push('Estimated release of ' + input.processText(input, success, error) + ':');
+    reply.push('Estimated release of ' + input.processText(input) + ':');
   } else
     reply.push('Estimated release of No Man\'s Sky: ');
   reply.push(result);
@@ -245,7 +246,7 @@ function getRelease(input, success, error) {
     return reply;
 }
 
-function getInceptionNoise(input, success, error) {
+function getInceptionNoise(input) {
   var reply = [];
   reply.push('http://inception.davepedu.com/inception.mp3');
   reply.push('warning: noise');
@@ -253,60 +254,60 @@ function getInceptionNoise(input, success, error) {
     return reply;
 }
 
-function getFlip(input, success, error) {
+function getFlip(input) {
   var reply = [];
   // Add to return array
-  reply.push(flip(input.processText(input, success, error)));
+  reply.push(flip(input.processText(input)));
   if (reply.length)
     return reply;
 }
 
-function getSecretText(input, success, error) {
+function getSecretText(input) {
   var reply = [];
-  reply.push(getSecretLatin(input.processText(input, success, error)));
+  reply.push(getSecretLatin(input.processText(input)));
   if (reply.length)
     return reply;
 }
 
-function getTrkText(input, success, error) {
+function getTrkText(input) {
   var reply = [];
-  reply.push(getTrkLatin(input.processText(input, success, error)));
+  reply.push(getTrkLatin(input.processText(input)));
   if (reply.length)
     return reply;
 }
 
-function getJadenText(input, success, error) {
+function getJadenText(input) {
   var reply = [];
-  reply.push(toTitleCase(input.processText(input, success, error)));
+  reply.push(toTitleCase(input.processText(input)));
   if (reply.length)
     return reply;
 }
 
-function getAlvvText(input, success, error) {
+function getAlvvText(input) {
   var reply = [];
-  reply.push(getAlvvLatin(input.processText(input, success, error)));
+  reply.push(getAlvvLatin(input.processText(input)));
   //reply.push('nope');
   if (reply.length)
     return reply;
 }
 
-function getMessText(input, success, error) {
+function getMessText(input) {
   var reply = [];
-  reply.push(getSecretLatin(getTrkLatin(toTitleCase(input.processText(input, success, error)))));
+  reply.push(getSecretLatin(getTrkLatin(toTitleCase(input.processText(input)))));
   if (reply.length)
     return reply;
 }
 
-function getFuckText(input, success, error) {
+function getFuckText(input) {
   var reply = [];
-  reply.push(flip(getSecretLatin(getTrkLatin(toTitleCase(input.processText(input, success, error))))));
+  reply.push(flip(getSecretLatin(getTrkLatin(toTitleCase(input.processText(input))))));
   if (reply.length)
     return reply;
 }
 
-function getThanks(input, success, error) {
+function getThanks(input) {
   var reply = [];
-  var text = input.processText(input, success, error);
+  var text = input.processText(input);
   if (text === '')
     if (input.from === 'secret_online')
       reply.push('yeah, yeah. you created me.');
@@ -320,7 +321,7 @@ function getThanks(input, success, error) {
     return reply;
 }
 
-function getPrayer(input, success, error) {
+function getPrayer(input) {
   var reply = [];
   reply.push('Our Murray who art in Guildford,');
   reply.push('procedural be thy name.');
@@ -337,19 +338,19 @@ function getPrayer(input, success, error) {
     return reply;
 }
 
-function getBan(input, success, error) {
+function getBan(input) {
   var reply = [];
   if (args.length) {
-    reply.push('BANNING ' + input.processText(input, success, error));
+    reply.push('BANNING ' + input.processText(input));
   } else
     reply.push('so, uh... you going to specify who to let the banhammer loose on?');
   if (reply.length)
     return reply;
 }
 
-function getTrain(input, success, error) {
+function getTrain(input) {
   var reply = [];
-  var text = input.processText(input, success, error);
+  var text = input.processText(input);
   var train = '/|˳˳_˳˳|';
   var carriages = [
     '|˳˳_˳˳|',
@@ -371,14 +372,14 @@ function getTrain(input, success, error) {
     return reply;
 }
 
-function getCopyPasta(input, success, error) {
+function getCopyPasta(input) {
   var reply = [];
-  reply.push(copyPasta + input.processText(input, success, error));
+  reply.push(copyPasta + input.processText(input));
   if (reply.length)
     return reply;
 }
 
-function getRoll(input, success, error) {
+function getRoll(input) {
   var reply = [];
   var retString = "";
   args.forEach(function(roll) {
@@ -402,14 +403,14 @@ function getRoll(input, success, error) {
     return reply;
 }
 
-function getReturn(input, success, error) {
+function getReturn(input) {
   var reply = [];
   reply.push('type `~help return` for proper usage');
   if (reply.length)
     return reply;
 }
 
-function getBreak(input, success, error) {
+function getBreak(input) {
   var reply = [];
   reply.push('type `~help break` for proper usage');
   if (reply.length)

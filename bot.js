@@ -1,5 +1,6 @@
 var fs = require('fs');
 var http = require('http');
+var perms = require('./perms.js');
 // Set up modules
 var commandHandlers = {};
 var defautHandlers = [];
@@ -29,11 +30,7 @@ function loadAddons() {
         if (addon.commands) {
           var comms = Object.keys(addon.commands);
           comms.forEach(function(item) {
-            if (typeof addon.commands[item] === 'function') {
-              commandHandlers[item] = addon.commands[item];
-            } else if (typeof addon.commands[item] === 'object') {
-              commandHandlers[item] = addon.commands[item].f;
-            }
+            commandHandlers[item] = addon.commands[item];
           });
         }
         // Register default handlers
@@ -111,8 +108,40 @@ function getText(input, success, error) {
     input.args[0] = input.args[0].substring(1);
     var handler = commandHandlers[input.args[0]];
     if (handler) {
+      // Do perms stuff here
+      if (input.user) {
+        var permLevel = perms.getPermLevel(input.user, input.key);
+        if (typeof handler === 'object') {
+          if (handler.perm) {
+            if (permLevel < handler.perm) {
+              if (error) {
+                error(['insufficient permission level']);
+              } else {
+                return ['insufficient permission level'];
+              }
+            }
+          }
+        }
+      } else {
+        if (typeof handler === 'object') {
+          if (handler.perm) {
+            if (0 < handler.perm) {
+              if (error) {
+                error(['insufficient permission level']);
+              } else {
+                return ['insufficient permission level'];
+              }
+            }
+          }
+        }
+      }
       input.args.splice(0, 1);
-      var result = handler(input, success, error);
+      var result;
+      if (typeof handler === 'function') {
+        result = handler(input, success, error);
+      } else if (typeof handler === 'object') {
+        result = handler.f(input, success, error);
+      }
       if (result) {
         reply = result;
       }
