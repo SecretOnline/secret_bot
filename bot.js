@@ -1,6 +1,7 @@
 var fs = require('fs');
 var http = require('http');
 var perms = require('./perms.js');
+var help = require('./help.js');
 // Set up modules
 var commandHandlers = {};
 var defautHandlers = [];
@@ -8,6 +9,27 @@ var addons = {};
 // start http server
 
 function loadAddons() {
+  function loadAO(addon) {
+    // Register commands
+    if (addon.commands) {
+      var comms = Object.keys(addon.commands);
+      comms.forEach(function(item) {
+        commandHandlers[item] = addon.commands[item];
+        if (typeof commandHandlers[item] === 'object') {
+          if (commandHandlers[item].help) {
+            help.registerHelp(item, commandHandlers[item].help);
+          }
+        }
+      });
+    }
+    // Register default handlers
+    if (addon.default) {
+      addon.default.forEach(function(item) {
+        defautHandlers.push(item);
+      });
+    }
+  }
+
   // List all files in addons directory
   console.info('loading addons');
   fs.readdir('./addons', function(e, files) {
@@ -25,23 +47,13 @@ function loadAddons() {
           console.warn('either fix, or remove');
           return;
         }
+        loadAO(addon);
         console.info('loaded ' + file);
-        // Register commands
-        if (addon.commands) {
-          var comms = Object.keys(addon.commands);
-          comms.forEach(function(item) {
-            commandHandlers[item] = addon.commands[item];
-          });
-        }
-        // Register default handlers
-        if (addon.default) {
-          addon.default.forEach(function(item) {
-            defautHandlers.push(item);
-          });
-        }
       });
     }
   });
+  loadAO(perms);
+  loadAO(help);
 }
 
 function startHTTPServ() {
@@ -56,31 +68,33 @@ function startHTTPServ() {
         /**
          * Callback if success
          */
-        function success(data) {
+        function success(data, out) {
+          if (!out) {
+            out = {};
+          }
           response.writeHead(200, {
             'Access-Control-Allow-Origin': '*',
             'Content-Type': 'application/json',
             'Server': 'secret_bot'
           });
-          var out = {
-            status: 'success',
-            data: data
-          };
+          out.status = 'success';
+          out.data = data;
           response.end(JSON.stringify(out));
         }
         /**
          * Callback if failed
          */
-        function error(data) {
+        function error(data, extraProperties) {
+          if (!out) {
+            out = {};
+          }
           response.writeHead(400, {
             'Access-Control-Allow-Origin': '*',
             'Content-Type': 'application/json',
             'Server': 'secret_bot'
           });
-          var out = {
-            status: 'error',
-            error: data
-          };
+          out.status = 'error';
+          out.error = data;
           response.end(JSON.stringify(out));
         }
 
@@ -121,6 +135,7 @@ function startHTTPServ() {
 
 function getText(input, success, error) {
   var reply = [];
+  var extraProperties = {};
 
   if (input.args) {
     input.args[0] = input.args[0].substring(1);
@@ -156,9 +171,12 @@ function getText(input, success, error) {
       input.args.splice(0, 1);
       var result;
       if (typeof handler === 'function') {
-        result = handler(input, success, error);
+        result = handler(input);
       } else if (typeof handler === 'object') {
-        result = handler.f(input, success, error);
+        result = handler.f(input);
+        if (handler.private) {
+          extraProperties.private = true;
+        }
       }
       if (result) {
         reply = result;
@@ -180,7 +198,7 @@ function getText(input, success, error) {
 
   if (success) {
     if (reply.length) {
-      success(reply);
+      success(reply, extraProperties);
     }
   } else {
     return reply;

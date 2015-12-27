@@ -71,50 +71,6 @@ var breakHelp = [
   '~flip this text will be flipped ~break this text won\'t be flipped',
 ];
 
-function getHelp(args, obj) {
-  var reply = [];
-  if (args.length === 0) {
-    reply = reply.concat(helpHelp);
-  } else {
-    if (args[0] === 'all') {
-      reply.push('all help');
-      reply = reply.concat(getHelp(['commands'], obj));
-      reply = reply.concat(getHelp(['aliases'], obj));
-      reply = reply.concat(getHelp(['emotes'], obj));
-    } else if (args[0] === 'commands') {
-      var commString = "";
-      var keys = Object.keys(functions);
-      for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
-        if (!(typeof functions[key] === 'object' && functions[key].perm && functions[key].perm > obj.perm)) {
-          commString += key;
-          if (typeof functions[key] === 'object')
-            if (functions[key].help)
-              commString += ' *';
-          if (i !== keys.length - 1)
-            commString += ', ';
-        }
-      }
-      reply.push('list of commands');
-      reply.push('`*` denotes detailed help');
-      reply.push(commString);
-    } else if (args[0] === 'emotes') {
-      reply.push('list of emotes');
-      reply.push(Object.keys(emotes).join(', '));
-    } else if (args[0] === 'aliases') {
-      reply.push('list of aliases');
-      reply.push(Object.keys(aliases).join(', '));
-    } else if (typeof functions[args[0]] === 'object') {
-      if (functions[args[0]].help)
-        reply = reply.concat(functions[args[0]].help);
-    } else {
-      reply.push('there\'s no help for ' + args[0] + ' yet');
-      reply.push('you should yell at secret_online about it');
-    }
-  }
-  return reply;
-}
-
 /* Commands */
 function evaluate(input) {
   var reply = [];
@@ -556,10 +512,6 @@ function toTitleCase(str) {
 
 // Big functions dictionary
 var functions = {
-  'help': {
-    f: getHelp,
-    help: helpHelp
-  },
   'eval': {
     f: evaluate,
     perm: 10
@@ -575,12 +527,12 @@ var functions = {
   'return': {
     f: getReturn,
     help: returnHelp,
-    replyType: 'notice'
+    private: true
   },
   'break': {
     f: getBreak,
     help: breakHelp,
-    replyType: 'notice'
+    private: true
   },
   'source': getSource,
   'train': getTrain,
@@ -637,7 +589,10 @@ var functions = {
   'thanks': getThanks,
   'prayer': getPrayer,
   'BANHAMMER': getBan,
-  'roll': getRoll
+  'roll': {
+    f: getRoll,
+    help: rollHelp
+  }
 };
 
 module.exports = {
