@@ -62,7 +62,11 @@ function startHTTPServ() {
             'Content-Type': 'application/json',
             'Server': 'secret_bot'
           });
-          response.end(JSON.stringify(data));
+          var out = {
+            status: 'success',
+            data: data
+          };
+          response.end(JSON.stringify(out));
         }
         /**
          * Callback if failed
@@ -73,10 +77,21 @@ function startHTTPServ() {
             'Content-Type': 'application/json',
             'Server': 'secret_bot'
           });
-          response.end(JSON.stringify(data));
+          var out = {
+            status: 'error',
+            error: data
+          };
+          response.end(JSON.stringify(out));
         }
 
         var input = JSON.parse(reqBody);
+        if (input.text) {
+          input.args = input.text.split(' ');
+        }
+        if (!input.user) {
+          input.user = 'no-user';
+        }
+        console.log(input.user + ': ' + input.args.join(' '));
         // Attach functions to input object
         input.processText = processText;
         input.getText = getText;
@@ -84,9 +99,12 @@ function startHTTPServ() {
         try {
           getText(input, success, error);
         } catch (e) {
-          console.error('error encountered while processing ' + reqBody);
           console.error(e);
-          error([e.toString()]);
+          error([
+            'error occured: ' + e.message,
+            'this error has been logged'
+          ]);
+          //TODO: Actually log the error
         }
       });
     } else {
@@ -191,6 +209,7 @@ function processText(input) {
     input.args = words;
     var part1 = processText(input);
     input.args = second;
+    var part2 = processText(input);
     str = part1 + ' ' + part2;
 
     return str;

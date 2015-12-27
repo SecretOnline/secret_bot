@@ -3,10 +3,10 @@ var aliases = JSON.parse(fs.readFileSync('data/aliases.json'));
 
 function changeAlias(input, success, error) {
   var reply = [];
-  var comm = args.splice(0, 1)[0];
-  var key = args.splice(0, 1)[0];
+  var comm = input.args.splice(0, 1)[0];
+  var key = input.args.splice(0, 1)[0];
   if (comm === 'add') {
-    var res = input.processText(args, obj);
+    var res = input.processText(input);
     if (aliases[key])
       reply.push('alias already exists');
     else {
@@ -43,7 +43,10 @@ function findAlias(input) {
 
 module.exports = {
   commands: {
-    alias: changeAlias
+    alias: {
+      f: changeAlias,
+      perm: 10
+    }
   },
   default: [findAlias]
 };

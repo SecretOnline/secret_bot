@@ -120,7 +120,12 @@ function evaluate(input) {
   var reply = [];
   // Evaluate input
   var f = new Function(input.processText(input));
-  reply.push(f().toString());
+  var result = f.call({});
+  if (!(typeof result !== 'undefined' && result !== null)) {
+    reply.push(result.toString());
+  } else {
+    reply.push('no return statement given');
+  }
   if (reply.length)
     return reply;
 }
@@ -154,7 +159,7 @@ function getSource(input) {
 function getWikiLink(input) {
   var reply = [];
   var url = 'https://en.wikipedia.org/wiki/';
-  if (args.length > 0)
+  if (input.args.length > 0)
     url += toTitleCase(input.processText(input));
   else
     url += 'Main_Page';
@@ -169,7 +174,7 @@ function getWikiLink(input) {
 function getYtLink(input) {
   var reply = [];
   var url = 'https://www.youtube.com/';
-  if (args.length > 0)
+  if (input.args.length > 0)
     url += 'results?search_query=' + input.processText(input);
   url = url.replace(/ /g, '+');
   url = encodeURI(url);
@@ -182,7 +187,7 @@ function getYtLink(input) {
 function getGoogleLink(input) {
   var reply = [];
   var url = 'https://www.google.com/';
-  if (args.length > 0)
+  if (input.args.length > 0)
     url += 'search?q=' + input.processText(input);
   url = url.replace(/ /g, '+');
   url = encodeURI(url);
@@ -195,7 +200,7 @@ function getGoogleLink(input) {
 function getLmgtfyLink(input) {
   var reply = [];
   var url = 'http://lmgtfy.com/';
-  if (args.length > 0)
+  if (input.args.length > 0)
     url += '?q=' + input.processText(input);
   url = url.replace(/ /g, '+');
   url = encodeURI(url);
@@ -208,7 +213,7 @@ function getLmgtfyLink(input) {
 function getSearchLink(input) {
   var reply = [];
   var url = 'https://www.reddit.com/r/NoMansSkyTheGame/';
-  if (args.length > 0)
+  if (input.args.length > 0)
     url += 'search?sort=new&restrict_sr=on&t=all&q=' + input.processText(input);
   url = url.replace(/ /g, '+');
   url = encodeURI(url);
@@ -220,8 +225,8 @@ function getSearchLink(input) {
 
 function getInfoLink(input) {
   var reply = [];
-  var url = 'http://secretonline.github.io/NMS-Info/';
-  if (args.length > 0)
+  var url = 'https://secretonline.github.io/NMS-Info/';
+  if (input.args.length > 0)
     url += '?search=' + input.processText(input);
   url = url.replace(/ /g, '+');
   url = encodeURI(url);
@@ -236,7 +241,7 @@ function getRelease(input) {
 
   var result = 'June™';
 
-  if (args.length) {
+  if (input.args.length) {
     reply.push('Estimated release of ' + input.processText(input) + ':');
   } else
     reply.push('Estimated release of No Man\'s Sky: ');
@@ -340,7 +345,7 @@ function getPrayer(input) {
 
 function getBan(input) {
   var reply = [];
-  if (args.length) {
+  if (input.args.length) {
     reply.push('BANNING ' + input.processText(input));
   } else
     reply.push('so, uh... you going to specify who to let the banhammer loose on?');
@@ -382,7 +387,7 @@ function getCopyPasta(input) {
 function getRoll(input) {
   var reply = [];
   var retString = "";
-  args.forEach(function(roll) {
+  input.args.forEach(function(roll) {
     if (roll.match(/\d+d\d+/)) {
       var rSplit = roll.split('d');
       var fResult = 0;
