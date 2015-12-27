@@ -44,6 +44,7 @@ function loadAddons() {
           addon = require('./addons/' + file);
         } catch (e) {
           console.warn('file ' + file + ' is not a node module or contains errors');
+          console.error(e.message);
           console.warn('either fix, or remove');
           return;
         }
@@ -84,7 +85,7 @@ function startHTTPServ() {
         /**
          * Callback if failed
          */
-        function error(data, extraProperties) {
+        function error(data, out) {
           if (!out) {
             out = {};
           }
