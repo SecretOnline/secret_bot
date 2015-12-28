@@ -9,7 +9,7 @@ function getHelp(input) {
         if (Array.isArray(helpContext[curr])) {
           return helpContext[curr];
         } else {
-          return helpContext[curr]['_default']
+          return helpContext[curr]._default;
         }
       } else {
         args.splice(0, 1);
@@ -22,12 +22,12 @@ function getHelp(input) {
     }
   }
 
+  var title = ' - secret_bot help - ' + input.args.join(' ') + ' - ';
   var arr = recursiveHelpSearch(input.args, helps);
 
   if (arr[0] === null) {
     return arr;
   } else {
-    var title = ' - secret_bot help - ' + input.args.join(' ') + ' - ';
     return [title].concat(arr);
   }
 }

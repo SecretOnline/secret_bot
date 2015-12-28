@@ -3,6 +3,7 @@ var fs = require('fs');
 var trivia;
 try {
   trivia = JSON.parse(fs.readFileSync('data/trivia.json'));
+  console.log('[trivia] loaded ' + trivia.length + ' questions');
 } catch (e) {
   throw new Error('no trivia questions. please create \'data/trivia.json\'');
 }
@@ -34,6 +35,7 @@ function getTrivia(input) {
     } else {
       return [
         'there is no question right now',
+        trivia.length + ' questions loaded',
         'type `~trivia start` to get one'
       ];
     }
@@ -65,12 +67,41 @@ function getTrivia(input) {
     } else {
       return ['nothing to unskip'];
     }
+  } else if (input.args[0] === 'reload') {
+    try {
+      trivia = JSON.parse(fs.readFileSync('data/trivia.json'));
+    } catch (e) {
+      return ['unable to reload trivia. please check the file'];
+    }
+    return ['loaded ' + trivia.length + ' questions'];
+  }
+}
+
+function getPoints(input) {
+  if (input.args.length) {
+    var name = input.args.join(' ');
+    if (points[name]) {
+      return name + ' has ' + points[name] + ' points';
+    } else {
+      return name + ' hasn\'t got any points';
+    }
+  } else {
+    var keys = Object.keys(points);
+    keys.sort(function(a, b) {
+      return points[a] - points[b];
+    });
+    var ret = [];
+    ret.push('top 5 scores');
+    for (var i = 0; i < Math.min(keys.length, 5); i++) {
+      ret.push((i + 1) + '. ' + keys[0] + ': ' + points[keys[0]]);
+    }
+    return ret;
   }
 }
 
 function answer(input) {
   function success(input) {
-    var newPoints = Number.parseInt(currQuestion.p) || 5;
+    var newPoints = Number.parseInt(currQuestion.points) || 5;
     if (!points[input.user.toLowerCase()]) {
       points[input.user.toLowerCase()] = 0;
     }
@@ -106,13 +137,15 @@ function answer(input) {
         var ansFound = false;
         currQuestion.a.forEach(function(item) {
           if (!ansFound) {
-            if (ans.toLowerCase() === currQuestion.a.toLowerCase()) {
-              return success(input);
+            if (ans.toLowerCase() === item.toLowerCase()) {
+              ansFound = success(input);
             }
           }
         });
-        if (!ans) {
+        if (!ansFound) {
           return failure(input);
+        } else {
+          return ansFound;
         }
       }
     } else {
@@ -145,8 +178,16 @@ function newQuestion() {
 }
 
 var triviaHelp = {
-  _default: [''],
-  answer: ['']
+  _default: [
+    'trivia for secret_bot',
+    'type `~trivia start` to start a new round',
+    'meaningless points will be awarded for correct answers',
+    '`~trivia skip` can be used to skip a question'
+  ],
+  answer: [
+    'answers the trivia question',
+    'can be used by typing either `~trivia answer` or `~a`'
+  ]
 };
 
 module.exports = {
@@ -166,6 +207,7 @@ module.exports = {
     cheat: {
       f: cheat,
       perm: 9
-    }
+    },
+    points: getPoints
   }
 };
