@@ -157,10 +157,17 @@ function answer(input) {
 }
 
 function cheat(input) {
-  return [
-    'wait, who would even think of doing such a thing?',
-    'oh, you. that\'s who'
-  ];
+  if (input.user) {
+    points[input.user]--;
+    savePoints();
+    newQuestion();
+    return [
+      'wait, cheating? who would even think of doing such a thing?',
+      'oh, ' + input.user + '. that\'s who',
+      'a new question has been picked:',
+      currQuestion.q
+    ];
+  }
 }
 
 function savePoints() {
@@ -206,7 +213,7 @@ module.exports = {
     },
     cheat: {
       f: cheat,
-      perm: 9
+      perm: 4
     },
     points: getPoints
   }
