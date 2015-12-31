@@ -100,26 +100,39 @@ function startHTTPServ() {
         }
 
         var input = JSON.parse(reqBody);
+
         if (input.text) {
           input.args = input.text.split(' ');
         }
         if (!input.user) {
           input.user = 'no-user';
         }
-        console.log(input.user + ': ' + input.args.join(' '));
         // Attach functions to input object
         input.processText = processText;
         input.getText = getText;
         // Let's go
-        try {
-          getText(input, success, error);
-        } catch (e) {
-          console.error(e);
-          error([
-            'error occured: ' + e.message,
-            'this error has been logged'
-          ]);
-          //TODO: Actually log the error
+        if (!input.type || input.type === 'text') {
+          console.log(input.user + ': ' + input.args.join(' '));
+          try {
+            getText(input, success, error);
+          } catch (e) {
+            console.error(e);
+            error([
+              'error occured: ' + e.message,
+              'this error has been logged'
+            ]);
+            //TODO: Actually log the error
+          }
+        } else if (input.type === 'greet') {
+          input.args = ['~greet'].concat([input.user]);
+
+          getText(input, function(out) {
+            if (out[0] === 'no greeting for ' + input.args[0]) {
+              error(['no greeting']);
+            } else {
+              success(out);
+            }
+          }, error);
         }
       });
     } else {
@@ -133,6 +146,8 @@ function startHTTPServ() {
   }).listen(25567, '127.0.0.1');
   console.log('Server running at http://127.0.0.1:25567/');
 }
+
+// TODO: add greeting replier
 
 function getText(input, success, error) {
   var reply = [];
@@ -148,11 +163,7 @@ function getText(input, success, error) {
         if (typeof handler === 'object') {
           if (handler.perm) {
             if (permLevel < handler.perm) {
-              if (error) {
-                error(['insufficient permission level']);
-              } else {
-                return ['insufficient permission level'];
-              }
+              error(['insufficient permission level']);
             }
           }
         }
@@ -160,11 +171,7 @@ function getText(input, success, error) {
         if (typeof handler === 'object') {
           if (handler.perm) {
             if (0 < handler.perm) {
-              if (error) {
-                error(['insufficient permission level']);
-              } else {
-                return ['insufficient permission level'];
-              }
+              error(['insufficient permission level']);
             }
           }
         }
@@ -191,18 +198,14 @@ function getText(input, success, error) {
       });
       if (res) {
         reply = res;
-      } else {
-        error(['command ' + input.args[0] + ' does not exist']);
       }
     }
   }
 
-  if (success) {
-    if (reply.length) {
-      success(reply, extraProperties);
-    }
+  if (reply.length) {
+    success(reply, extraProperties);
   } else {
-    return reply;
+    error(['command ' + input.args[0] + ' does not exist']);
   }
 }
 
