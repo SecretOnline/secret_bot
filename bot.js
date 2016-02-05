@@ -1,5 +1,4 @@
-/* jslint bitwise: true, node: true */
-/* global Promise */
+/* jslint bitwise: true, node: true, esversion: 6 */
 'use strict';
 var fs = require('fs');
 var perms = require('./perms.js');
@@ -8,6 +7,39 @@ var help = require('./help.js');
 var commandHandlers = {};
 var defautHandlers = [];
 var addons = {};
+
+class Input {
+  constructor(text, user) {
+    this.user = user;
+    this.text = text;
+    this.args = text.split(' ');
+  }
+
+  get args() {
+    return this.args;
+  }
+
+  get user() {
+    if (this.user instanceof Object) {
+      return this.user.name;
+    } else {
+      return this.user;
+    }
+  }
+
+  authLevel() {
+    if (this.user instanceof Object) {
+      if (this.perm === undefined) {
+        this.perm = perms.getPermLevel(this.user.name, this.user.key);
+        return this.perm;
+      } else {
+        return this.perm;
+      }
+    } else {
+      return 0;
+    }
+  }
+}
 
 function loadAddons() {
   function loadAO(addon) {
