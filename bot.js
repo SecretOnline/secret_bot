@@ -1,12 +1,13 @@
+/* jslint bitwise: true, node: true */
+/* global Promise */
+'use strict';
 var fs = require('fs');
-var http = require('http');
 var perms = require('./perms.js');
 var help = require('./help.js');
 // Set up modules
 var commandHandlers = {};
 var defautHandlers = [];
 var addons = {};
-// start http server
 
 function loadAddons() {
   function loadAO(addon) {
@@ -57,97 +58,24 @@ function loadAddons() {
   loadAO(help);
 }
 
-function startHTTPServ() {
-  httpServer = http.createServer(function(request, response) {
-    if (request.method === 'POST') {
-      // Get POST body
-      var reqBody = '';
-
-      request.on('data', function(data) {
-        reqBody += data;
-      }).on('end', function() {
-        /**
-         * Callback if success
-         */
-        function success(data, out) {
-          if (!out) {
-            out = {};
-          }
-          response.writeHead(200, {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
-            'Server': 'secret_bot'
-          });
-          out.status = 'success';
-          out.data = data;
-          response.end(JSON.stringify(out));
-        }
-        /**
-         * Callback if failed
-         */
-        function error(data, out) {
-          if (!out) {
-            out = {};
-          }
-          response.writeHead(400, {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
-            'Server': 'secret_bot'
-          });
-          out.status = 'error';
-          out.error = data;
-          response.end(JSON.stringify(out));
-        }
-
-        var input = JSON.parse(reqBody);
-
-        if (input.text) {
-          input.args = input.text.split(' ');
-        }
-        if (!input.user) {
-          input.user = 'no-user';
-        }
-        // Attach functions to input object
-        input.processText = processText;
-        input.getText = getText;
-        // Let's go
-        if (!input.type || input.type === 'text') {
-          console.log(input.user + ': ' + input.args.join(' '));
-          try {
-            getText(input, success, error);
-          } catch (e) {
-            console.error(e);
-            error([
-              'error occured: ' + e.message,
-              'this error has been logged'
-            ]);
-            //TODO: Actually log the error
-          }
-        } else if (input.type === 'greet') {
-          input.args = ['~greet'].concat([input.user]);
-
-          getText(input, function(out) {
-            if (out[0] === 'no greeting for ' + input.args[0]) {
-              error(['no greeting']);
-            } else {
-              success(out);
-            }
-          }, error);
-        }
-      });
-    } else {
-      response.writeHead(405, {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json',
-        'Server': 'secret_bot'
-      });
-      response.end(JSON.stringify(['requests must use POST']));
+function getText(input) {
+  return new Promise(function(resolve, reject) {
+    if (!input.user) {
+      reject(new Error('no user specified'));
     }
-  }).listen(25567, '127.0.0.1');
-  console.log('Server running at http://127.0.0.1:25567/');
-}
 
-// TODO: add greeting replier
+    var out = {};
+    var perm = perms.getPermLevel(input.user, input.key);
+    var replyPromise;
+
+    if (typeof handler === 'object') {
+      if (handler.perm) {
+        if (permLevel < handler.perm) {
+          reject(new Error('insufficient permission'));
+          return;
+        }
+      }
+    }
 
 function getText(input, success, error) {
   var reply = [];
@@ -263,7 +191,6 @@ function processText(input) {
 }
 
 loadAddons();
-startHTTPServ();
 
 module.exports = {
   processText: processText
