@@ -1,15 +1,23 @@
 /* jslint bitwise: true, node: true, esversion: 6 */
 'use strict';
 
+var modules = new Map();
+
 class Input {
   constructor(text, user) {
     if (!(text && user)) {
       throw new Error('invalid input');
     }
 
+    if (Array.isArray(text)) {
+      this.a = text;
+      this.t = text.join(' ');
+    } else {
+      this.t = text;
+      this.a = text.split(' ');
+    }
+
     this.u = user;
-    this.t = text;
-    this.a = text.split(' ');
   }
 
   get args() {
@@ -36,7 +44,23 @@ class Input {
  */
 function getText(input) {
   return new Promise(function(resolve, reject) {
-    // TODO: The entire thing.
+    // For now, reject unless command at front
+    if (input.text.chatAt(0) !== '~') {
+      reject();
+      return;
+    }
+
+    var prom = processPart(input);
+    prom.then(function(res) {
+      resolve(res);
+    }, function(err) {
+      reject(err);
+    });
+  });
+}
+
+function processPart(input) {
+  return new Promise(function(resolve, reject) {
   });
 }
 
