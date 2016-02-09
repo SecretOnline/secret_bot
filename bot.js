@@ -1,7 +1,19 @@
 /* jslint bitwise: true, node: true, esversion: 6 */
 'use strict';
 
-var modules = new Map();
+var commands = {
+  test: 'test successful',
+  test2: function() {
+    return 'other test successful';
+  },
+  test3: function() {
+    return new Promise(function(resolve, reject) {
+      setTimeout(function() {
+        resolve('test promise successful');
+      }, 1000);
+    });
+  }
+};
 
 class Input {
   constructor(text, user) {
@@ -45,7 +57,8 @@ class Input {
 function getText(input) {
   return new Promise(function(resolve, reject) {
     // For now, reject unless command at front
-    if (input.text.chatAt(0) !== '~') {
+    console.log('input: ' + input.text);
+    if (input.text.charAt(0) !== '~') {
       reject();
       return;
     }
@@ -53,14 +66,52 @@ function getText(input) {
     var prom = processPart(input);
     prom.then(function(res) {
       resolve(res);
-    }, function(err) {
-      reject(err);
-    });
+    }, reject);
   });
 }
 
 function processPart(input) {
   return new Promise(function(resolve, reject) {
+    if (input.args.length === 0) {
+      resolve('');
+    }
+
+    var comm = input.args.shift();
+    var afterProm = processPart(input);
+    afterProm.then(function(next) {
+      var out = '';
+      if (comm.charAt(0) === '~') {
+        comm = comm.slice(1);
+        if (commands[comm]) {
+          if (typeof commands[comm] === 'string') {
+            out = commands[comm];
+          } else if (typeof commands[comm] === 'function') {
+            out = commands[comm]();
+            if (out instanceof Promise) {
+              out.then(function(result) {
+                resolve(result);
+              });
+              return;
+            }
+          }
+        } else {
+          reject(new Error('no command ' + comm));
+          return;
+        }
+      } else {
+        if (next) {
+          out = comm;
+        } else {
+          out = comm;
+        }
+      }
+
+      if (next) {
+        resolve(out + ' ' + next);
+      } else {
+        resolve(out);
+      }
+    });
   });
 }
 
