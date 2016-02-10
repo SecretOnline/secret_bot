@@ -2,6 +2,8 @@
 'use strict';
 var fs = require('fs');
 
+var help = require('./help.js');
+
 var commands = {};
 
 class Input {
@@ -80,6 +82,12 @@ function reloadAddons() {
           keys = Object.keys(obj);
           keys.forEach(function(key) {
             commands[key] = obj[key];
+
+            if (typeof obj[key] === 'object') {
+              if (obj[key].help) {
+                help.registerHelp(key, obj[key].help);
+              }
+            }
           });
           res2();
 
@@ -88,6 +96,9 @@ function reloadAddons() {
           console.log('ignoring ' + name);
           res2();
         }
+
+        commands.help = help.commands.help;
+        help.registerHelp('help', help.commands.help.help);
       });
     }
 
@@ -117,18 +128,27 @@ function getText(input) {
       resolve('');
       return;
     }
-
     var comm = input.args.shift();
-    var afterProm = getText(input);
+    var nextInput;
+    if (input.args.length === 0) {
+      nextInput = new Input([], input.user);
+    } else {
+      nextInput = new Input(input.args.join(' '), input.user);
+    }
+    var afterProm = getText(nextInput);
     afterProm.then(function(next) {
       var out = '';
       if (comm.charAt(0) === '~') {
         comm = comm.slice(1);
         if (commands[comm]) {
           if (typeof commands[comm] === 'string') {
-            out = commands[comm];
+            if (commands[comm].match(/\{args\}/)) {
+              out = commands[comm].replace(/\{args\}/g, next);
+            } else {
+              out = commands[comm] + ' ' + next;
+            }
           } else if (typeof commands[comm] === 'function') {
-            out = commands[comm]();
+            out = commands[comm](new Input(next, input.user));
             if (out instanceof Promise) {
               out.then(function(result) {
                 resolve(result);
@@ -136,7 +156,7 @@ function getText(input) {
               return;
             }
           } else if (typeof commands[comm] === 'object') {
-            out = commands[comm].f();
+            out = commands[comm].f(new Input(next, input.user));
             if (out instanceof Promise) {
               out.then(function(result) {
                 resolve(result);
@@ -152,17 +172,13 @@ function getText(input) {
         }
       } else {
         if (next) {
-          out = comm;
+          out = comm + ' ' + next;
         } else {
           out = comm;
         }
       }
 
-      if (next) {
-        resolve(out + ' ' + next);
-      } else {
-        resolve(out);
-      }
+      resolve(out);
     });
   });
 }
