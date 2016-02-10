@@ -2,19 +2,7 @@
 'use strict';
 var fs = require('fs');
 
-var commands = {
-  test: 'test successful',
-  test2: function() {
-    return 'other test successful';
-  },
-  test3: function() {
-    return new Promise(function(resolve, reject) {
-      setTimeout(function() {
-        resolve('test promise successful');
-      }, 1000);
-    });
-  }
-};
+var commands = {};
 
 class Input {
   constructor(text, user) {
@@ -58,22 +46,46 @@ function reloadAddons() {
     function loadAddon(name) {
       return new Promise(function(res2, rej2) {
         name = './addons/' + name;
-        if (name.split('.').pop() === 'json') {
-          fs.readFile(name, function(err, data) {
-            if (err) {
-              rej2(err);
-              return;
-            }
-
-            var obj = JSON.parse(data);
-            var keys = Object.keys(obj);
-            keys.forEach(function(key) {
-              commands[key] = obj[key];
-            });
-
+        var ext = name.split('.').pop();
+        var mod, obj, keys;
+        if (ext === 'json') {
+          try {
+            obj = require.main.require(name);
+          } catch (e) {
+            console.error('error while require-ing ' + name + '. continuing');
+            console.error(e);
+            console.error(e.stack);
             res2();
+            return;
+          }
+
+          keys = Object.keys(obj);
+          keys.forEach(function(key) {
+            commands[key] = obj[key];
           });
+
+          console.log('loaded ' + name);
+          res2();
+        } else if (ext === 'js') {
+          try {
+            mod = require.main.require(name);
+          } catch (e) {
+            console.error('error while require-ing ' + name + '. continuing');
+            console.error(e);
+            console.error(e.stack);
+            res2();
+            return;
+          }
+          obj = mod.commands;
+          keys = Object.keys(obj);
+          keys.forEach(function(key) {
+            commands[key] = obj[key];
+          });
+          res2();
+
+          console.log('loaded ' + name);
         } else {
+          console.log('ignoring ' + name);
           res2();
         }
       });
@@ -83,8 +95,6 @@ function reloadAddons() {
 
     fs.readdir('./addons/', function(err, data) {
       if (err) {
-        console.error(err);
-        console.error(err.stack);
         reject(err);
         return;
       }
@@ -94,12 +104,8 @@ function reloadAddons() {
         proms.push(loadAddon(item));
       });
 
-      Promise.all(proms).then(function() {
-        resolve();
-      }, function(e) {
-        console.error('failed');
-        console.error(e);
-        console.error(e.stack);
+      Promise.all(proms).then(resolve, function(err) {
+        reject(err);
       });
     });
   });
@@ -123,6 +129,14 @@ function getText(input) {
             out = commands[comm];
           } else if (typeof commands[comm] === 'function') {
             out = commands[comm]();
+            if (out instanceof Promise) {
+              out.then(function(result) {
+                resolve(result);
+              });
+              return;
+            }
+          } else if (typeof commands[comm] === 'object') {
+            out = commands[comm].f();
             if (out instanceof Promise) {
               out.then(function(result) {
                 resolve(result);
