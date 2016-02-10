@@ -1,5 +1,6 @@
 /* jslint bitwise: true, node: true, esversion: 6 */
 'use strict';
+var fs = require('fs');
 
 var commands = {
   test: 'test successful',
@@ -49,35 +50,69 @@ class Input {
   }
 }
 
-/**
- * Preocesses the input and resolves to an output
- * @param {Input} input An Input object to process
- * @return {Promise} A promise that rejects on invalid input, and resolves once input is processed
- */
-function getText(input) {
+function reloadAddons() {
   return new Promise(function(resolve, reject) {
-    // For now, reject unless command at front
-    console.log('input: ' + input.text);
-    if (input.text.charAt(0) !== '~') {
-      reject();
-      return;
+    /**
+     * Loads a single addon
+     */
+    function loadAddon(name) {
+      return new Promise(function(res2, rej2) {
+        name = './addons/' + name;
+        if (name.split('.').pop() === 'json') {
+          fs.readFile(name, function(err, data) {
+            if (err) {
+              rej2(err);
+              return;
+            }
+
+            var obj = JSON.parse(data);
+            var keys = Object.keys(obj);
+            keys.forEach(function(key) {
+              commands[key] = obj[key];
+            });
+
+            res2();
+          });
+        } else {
+          res2();
+        }
+      });
     }
 
-    var prom = processPart(input);
-    prom.then(function(res) {
-      resolve(res);
-    }, reject);
+    commands = {};
+
+    fs.readdir('./addons/', function(err, data) {
+      if (err) {
+        console.error(err);
+        console.error(err.stack);
+        reject(err);
+        return;
+      }
+
+      var proms = [];
+      data.forEach(function(item) {
+        proms.push(loadAddon(item));
+      });
+
+      Promise.all(proms).then(function() {
+        resolve();
+      }, function(e) {
+        console.error('failed');
+        console.error(e);
+        console.error(e.stack);
+      });
+    });
   });
 }
 
-function processPart(input) {
+function getText(input) {
   return new Promise(function(resolve, reject) {
     if (input.args.length === 0) {
       resolve('');
     }
 
     var comm = input.args.shift();
-    var afterProm = processPart(input);
+    var afterProm = getText(input);
     afterProm.then(function(next) {
       var out = '';
       if (comm.charAt(0) === '~') {
@@ -94,6 +129,8 @@ function processPart(input) {
               return;
             }
           }
+          // } else if (aliases[comm]) {
+
         } else {
           reject(new Error('no command ' + comm));
           return;
@@ -115,7 +152,35 @@ function processPart(input) {
   });
 }
 
+// function aliasChange(input) {
+//   var reply = [];
+//   var comm = input.args.splice(0, 1)[0];
+//   var key = input.args.splice(0, 1)[0];
+//   if (comm === 'add') {
+//     var res = input.processText(input);
+//     if (aliases[key])
+//       reply.push('alias already exists');
+//     else {
+//       aliases[key] = res;
+//       reply.push('alias \'' + key + '\' added');
+//     }
+//   } else if (comm === 'remove') {
+//     if (aliases[key]) {
+//       delete aliases[key];
+//       reply.push('alias \'' + key + '\' removed');
+//     } else
+//       reply.push('alias doesn\'t exist');
+//   }
+//
+//   fs.writeFileSync('data/aliases.json', JSON.stringify(aliases, null, 2));
+//
+//   return reply;
+// }
+
+var ready = reloadAddons();
+
 module.exports = {
   getText: getText,
-  Input: Input
+  Input: Input,
+  ready: ready
 };
