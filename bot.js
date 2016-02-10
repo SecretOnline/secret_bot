@@ -109,6 +109,7 @@ function getText(input) {
   return new Promise(function(resolve, reject) {
     if (input.args.length === 0) {
       resolve('');
+      return;
     }
 
     var comm = input.args.shift();
