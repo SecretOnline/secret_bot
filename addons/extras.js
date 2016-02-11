@@ -28,6 +28,10 @@ function getProcedural(input) {
   return 'Every ' + text + ' procedural';
 }
 
+function getPrayer(input) {
+  return prayer;
+}
+
 var respawns = [{
   text: 'There is a fullness and a calmness there which can only come from knowing pain.',
   src: 'Dan Simmons, Hyperion'
@@ -90,10 +94,25 @@ var memes = {
   'itshappening': 'http://i.imgur.com/7drHiqr.gif'
 };
 
+var prayer = [
+  'Our Murray who art in Guildford,',
+  'procedural be thy name.',
+  'Thy universe come, thy game be done,',
+  'on Planet E3 as in Ethaedair.',
+  'Give us this day our IGN First,',
+  'and forgive our questions,',
+  'as we forgive those who don\'t read the FAQ.',
+  'Lead us not into release hype,',
+  'but deliver us the game.',
+  'For thine is Hello Games, the proc-gen, and the awards.',
+  'A-space-goat.'
+];
+
 module.exports = {
   commands: {
     meme: getMeme,
     procedural: getProcedural,
-    respawn: getRespawn
+    respawn: getRespawn,
+    prayer: getPrayer
   }
 };
