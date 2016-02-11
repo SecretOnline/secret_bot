@@ -99,6 +99,7 @@ function reloadAddons() {
 
         commands.help = help.commands.help;
         help.registerHelp('help', help.commands.help.help);
+        help.registerHelp('_default', help.commands.help.help);
       });
     }
 
@@ -151,17 +152,27 @@ function getText(input) {
             out = commands[comm](new Input(next, input.user));
             if (out instanceof Promise) {
               out.then(function(result) {
+                if (Array.isArray(result)) {
+                  result = result.join('\n');
+                }
                 resolve(result);
               });
               return;
+            } else if (Array.isArray(out)) {
+              out = out.join('\n');
             }
           } else if (typeof commands[comm] === 'object') {
             out = commands[comm].f(new Input(next, input.user));
             if (out instanceof Promise) {
               out.then(function(result) {
+                if (Array.isArray(result)) {
+                  result = result.join('\n');
+                }
                 resolve(result);
               });
               return;
+            } else if (Array.isArray(out)) {
+              out = out.join('\n');
             }
           }
           // } else if (aliases[comm]) {

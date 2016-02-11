@@ -26,7 +26,7 @@ function getHelp(input) {
   var arr = recursiveHelpSearch(input.args, helps);
 
   if (arr[0] === null) {
-    return arr;
+    throw new Error('function that always returns an array did not return an array');
   } else {
     return [title].concat(arr);
   }
@@ -36,10 +36,8 @@ function registerHelp(commandName, help) {
   helps[commandName] = help;
 }
 var helpHelp = [
-  '`~help commands` - list of commands',
-  '`~help emotes` - list of emotes',
-  '`~help aliases` - list of aliases (basic commands)',
-  'bot version: something else',
+  'for now, there is no help',
+  'bot version: 3.1.something.4',
   'contact secret_online if you\'re having problems'
 ];
 module.exports = {
