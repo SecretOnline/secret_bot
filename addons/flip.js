@@ -9,7 +9,6 @@ var flipHelp = [
 ];
 
 function getFlip(input) {
-  console.log('flipping ' + input.text);
   return flip(input.text);
 }
 
@@ -91,6 +90,9 @@ for (var i in flipTable) {
 
 module.exports = {
   commands: {
-    flip: getFlip
+    flip: {
+      f: getFlip,
+      help: flipHelp
+    }
   }
 };
