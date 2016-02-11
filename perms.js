@@ -1,28 +1,24 @@
 var fs = require('fs');
 var perms = JSON.parse(fs.readFileSync('data/perms.json'));
-var keys = JSON.parse(fs.readFileSync('data/keys.json'));
 
 function changePermLevel(input) {
-  var reply = [];
-  var user = args.splice(0, 1)[0];
-  var level = args.splice(0, 1)[0];
-  if (level === 0) {
-    delete perms[user];
-  } else {
+  var ret;
+  var user = input.args[0];
+  var level = input.args[1];
+  if (typeof level !== 'undefined') {
     perms[user] = level;
+    ret = 'set ' + user + '\'s permission level to ' + level;
+  } else {
+    return user + '\'s permission level is ' + perms[user];
   }
   fs.writeFileSync('data/perms.json', JSON.stringify(perms, null, 2));
 
-  return reply;
+  return ret;
 }
 
-function getPermLevel(user, key) {
+function getPermLevel(user) {
   if (perms[user]) {
-    if (keys[key]) {
-      return Math.min(perms[user], keys[key]);
-    } else {
-      return Math.min(perms[user], 5);
-    }
+    return Math.max(0, perms[user]);
   } else {
     return 0;
   }
@@ -32,7 +28,7 @@ module.exports = {
   commands: {
     perms: {
       f: changePermLevel,
-      perm: 10
+      perm: 9
     }
   },
   getPermLevel: getPermLevel

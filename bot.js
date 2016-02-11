@@ -3,11 +3,12 @@
 var fs = require('fs');
 
 var help = require('./help.js');
+var perms = require('./perms.js');
 
 var commands = {};
 
 class Input {
-  constructor(text, user) {
+  constructor(text, user, auth) {
     if (!(typeof text !== 'undefined' && user)) {
       throw new Error('invalid input');
     }
@@ -21,6 +22,7 @@ class Input {
     }
 
     this.u = user;
+    this.au = auth || false;
   }
 
   get args() {
@@ -37,6 +39,10 @@ class Input {
     } else {
       return this.u;
     }
+  }
+
+  get auth() {
+    return this.au;
   }
 }
 
@@ -98,6 +104,7 @@ function reloadAddons() {
         }
 
         commands.help = help.commands.help;
+        commands.perms = perms.commands.perms;
         help.registerHelp('help', help.commands.help.help);
         help.registerHelp('_default', help.commands.help.help);
       });
@@ -162,6 +169,18 @@ function getText(input) {
               out = out.join('\n');
             }
           } else if (typeof commands[comm] === 'object') {
+            if (commands[comm].perm) {
+              if (input.auth) {
+                if (commands[comm].perm > perms.getPermLevel(input.user)) {
+                  reject(new Error('no permission for command ' + comm));
+                  return;
+                }
+              } else {
+                reject(new Error('no permission for command ' + comm));
+                return;
+              }
+            }
+
             out = commands[comm].f(new Input(next, input.user));
             if (out instanceof Promise) {
               out.then(function(result) {
@@ -188,7 +207,7 @@ function getText(input) {
       }
 
       resolve(out);
-    });
+    }, reject);
   });
 }
 
