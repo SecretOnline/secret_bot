@@ -103,7 +103,7 @@ function getSearchLink(input) {
 
 function getInfoLink(input) {
   var url = 'https://secretonline.github.io/NMS-Info/';
-  if (input.args.length > 0)
+  if (input.text)
     url += '?search=' + input.text;
   url = url.replace(/ /g, '+');
   url = encodeURI(url);

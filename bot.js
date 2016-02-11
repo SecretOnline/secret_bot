@@ -8,7 +8,7 @@ var commands = {};
 
 class Input {
   constructor(text, user) {
-    if (!(text && user)) {
+    if (!(typeof text !== 'undefined' && user)) {
       throw new Error('invalid input');
     }
 
@@ -131,7 +131,7 @@ function getText(input) {
     }
     var comm = input.args.shift();
     var nextInput;
-    if (input.args.length === 0) {
+    if (!input.text) {
       nextInput = new Input([], input.user);
     } else {
       nextInput = new Input(input.args.join(' '), input.user);
@@ -175,8 +175,6 @@ function getText(input) {
               out = out.join('\n');
             }
           }
-          // } else if (aliases[comm]) {
-
         } else {
           reject(new Error('no command ' + comm));
           return;
