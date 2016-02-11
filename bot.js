@@ -139,9 +139,9 @@ function getText(input) {
     var comm = input.args.shift();
     var nextInput;
     if (!input.text) {
-      nextInput = new Input([], input.user);
+      nextInput = new Input([], input.user, input.auth);
     } else {
-      nextInput = new Input(input.args.join(' '), input.user);
+      nextInput = new Input(input.args.join(' '), input.user, input.auth);
     }
     var afterProm = getText(nextInput);
     afterProm.then(function(next) {
@@ -156,7 +156,7 @@ function getText(input) {
               out = commands[comm] + ' ' + next;
             }
           } else if (typeof commands[comm] === 'function') {
-            out = commands[comm](new Input(next, input.user));
+            out = commands[comm](new Input(next, input.user, input.auth));
             if (out instanceof Promise) {
               out.then(function(result) {
                 if (Array.isArray(result)) {
@@ -181,7 +181,7 @@ function getText(input) {
               }
             }
 
-            out = commands[comm].f(new Input(next, input.user));
+            out = commands[comm].f(new Input(next, input.user, input.auth));
             if (out instanceof Promise) {
               out.then(function(result) {
                 if (Array.isArray(result)) {
@@ -210,31 +210,6 @@ function getText(input) {
     }, reject);
   });
 }
-
-// function aliasChange(input) {
-//   var reply = [];
-//   var comm = input.args.splice(0, 1)[0];
-//   var key = input.args.splice(0, 1)[0];
-//   if (comm === 'add') {
-//     var res = input.processText(input);
-//     if (aliases[key])
-//       reply.push('alias already exists');
-//     else {
-//       aliases[key] = res;
-//       reply.push('alias \'' + key + '\' added');
-//     }
-//   } else if (comm === 'remove') {
-//     if (aliases[key]) {
-//       delete aliases[key];
-//       reply.push('alias \'' + key + '\' removed');
-//     } else
-//       reply.push('alias doesn\'t exist');
-//   }
-//
-//   fs.writeFileSync('data/aliases.json', JSON.stringify(aliases, null, 2));
-//
-//   return reply;
-// }
 
 var ready = reloadAddons();
 
