@@ -36,7 +36,7 @@ function say(input) {
 }
 
 function getWho(input) {
-  return input.user;
+  return input.user + ' ' + input.text;
 }
 
 function exec(input) {
