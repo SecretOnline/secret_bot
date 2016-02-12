@@ -16,6 +16,7 @@ try {
 }
 var currQuestion;
 var timeout;
+var skipUser;
 
 function getTrivia(input) {
   // Redirect '~trivia answer' to answer function
@@ -53,27 +54,30 @@ function getTrivia(input) {
       ];
     }
   } else if (input.args[0] === 'skip') {
-    timeout = setTimeout(function() {
-      currQuestion = null;
-    }, 10000);
-    return [
-      'question will be skipped in 10 seconds',
-      'use `~trivia unskip` to cancel'
-    ];
-  } else if (input.args[0] === 'unskip') {
-    if (timeout) {
-      clearTimeout(timeout);
-      return ['no longer skipping question'];
+    if (skipUser) {
+      if (skipUser !== input.user) {
+        currQuestion = null;
+        newQuestion();
+        return [
+          currQuestion.q,
+          'reward: ' + currQuestion.points + ' points'
+        ];
+      } else {
+        return 'nice try, ' + input.user;
+      }
     } else {
-      return ['nothing to unskip'];
+      return [
+        'skip requested',
+        'another user must `~trivia skip` to confirm'
+      ];
     }
   } else if (input.args[0] === 'reload') {
     try {
       trivia = JSON.parse(fs.readFileSync('data/trivia.json'));
     } catch (e) {
-      return ['unable to reload trivia. please check the file'];
+      return 'unable to reload trivia. please check the file';
     }
-    return ['loaded ' + trivia.length + ' questions'];
+    return 'loaded ' + trivia.length + ' questions';
   }
 }
 

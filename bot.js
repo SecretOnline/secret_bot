@@ -1,270 +1,220 @@
+/* jslint bitwise: true, node: true, esversion: 6 */
+'use strict';
 var fs = require('fs');
-var http = require('http');
-var perms = require('./perms.js');
-var help = require('./help.js');
-// Set up modules
-var commandHandlers = {};
-var defautHandlers = [];
-var addons = {};
-// start http server
 
-function loadAddons() {
-  function loadAO(addon) {
-    // Register commands
-    if (addon.commands) {
-      var comms = Object.keys(addon.commands);
-      comms.forEach(function(item) {
-        commandHandlers[item] = addon.commands[item];
-        if (typeof commandHandlers[item] === 'object') {
-          if (commandHandlers[item].help) {
-            help.registerHelp(item, commandHandlers[item].help);
-          }
-        }
-      });
+var help = require('./help.js');
+var perms = require('./perms.js');
+
+var commands = {};
+
+class Input {
+  constructor(text, user, auth) {
+    if (!(typeof text !== 'undefined' && user)) {
+      throw new Error('invalid input');
     }
-    // Register default handlers
-    if (addon.default) {
-      addon.default.forEach(function(item) {
-        defautHandlers.push(item);
-      });
+
+    if (Array.isArray(text)) {
+      this.a = text;
+      this.t = text.join(' ');
+    } else {
+      this.t = text;
+      this.a = text.split(' ');
+    }
+
+    this.u = user;
+    this.au = auth || false;
+  }
+
+  get args() {
+    return this.a;
+  }
+
+  get text() {
+    return this.t;
+  }
+
+  get user() {
+    if (this.u instanceof Object) {
+      return this.u.name;
+    } else {
+      return this.u;
     }
   }
 
-  // List all files in addons directory
-  console.info('loading addons');
-  fs.readdir('./addons', function(e, files) {
-    if (e) {
-      console.err('unable to find addons directory. exiting');
-      process.exit(1);
+  get auth() {
+    return this.au;
+  }
+}
+
+function reloadAddons() {
+  return new Promise(function(resolve, reject) {
+    /**
+     * Loads a single addon
+     */
+    function loadAddon(name) {
+      return new Promise(function(res2, rej2) {
+        name = './addons/' + name;
+        var ext = name.split('.').pop();
+        var mod, obj, keys;
+        if (ext === 'json') {
+          try {
+            obj = require.main.require(name);
+          } catch (e) {
+            console.error('error while require-ing ' + name + '. continuing');
+            console.error(e);
+            console.error(e.stack);
+            res2();
+            return;
+          }
+
+          keys = Object.keys(obj);
+          keys.forEach(function(key) {
+            commands[key] = obj[key];
+          });
+
+          console.log('loaded ' + name);
+          res2();
+        } else if (ext === 'js') {
+          try {
+            mod = require.main.require(name);
+          } catch (e) {
+            console.error('error while require-ing ' + name + '. continuing');
+            console.error(e);
+            console.error(e.stack);
+            res2();
+            return;
+          }
+          obj = mod.commands;
+          keys = Object.keys(obj);
+          keys.forEach(function(key) {
+            commands[key] = obj[key];
+
+            if (typeof obj[key] === 'object') {
+              if (obj[key].help) {
+                help.registerHelp(key, obj[key].help);
+              }
+            }
+          });
+          res2();
+
+          console.log('loaded ' + name);
+        } else {
+          console.log('ignoring ' + name);
+          res2();
+        }
+
+        commands.help = help.commands.help;
+        commands.perms = perms.commands.perms;
+        help.registerHelp('help', help.commands.help.help);
+        help.registerHelp('_default', help.commands.help.help);
+      });
+    }
+
+    commands = {};
+
+    fs.readdir('./addons/', function(err, data) {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      var proms = [];
+      data.forEach(function(item) {
+        proms.push(loadAddon(item));
+      });
+
+      Promise.all(proms).then(resolve, function(err) {
+        reject(err);
+      });
+    });
+  });
+}
+
+function getText(input) {
+  return new Promise(function(resolve, reject) {
+    if (input.args.length === 0) {
+      resolve('');
+      return;
+    }
+    var comm = input.args.shift();
+    var nextInput;
+    if (!input.text) {
+      nextInput = new Input([], input.user, input.auth);
     } else {
-      // Try load each file in the directory
-      files.forEach(function(file) {
-        var addon;
-        try {
-          addon = require('./addons/' + file);
-        } catch (e) {
-          console.warn('file ' + file + ' is not a node module or contains errors');
-          console.error(e.message);
-          console.warn('either fix, or remove');
+      nextInput = new Input(input.args.join(' '), input.user, input.auth);
+    }
+    var afterProm = getText(nextInput);
+    afterProm.then(function(next) {
+      var out = '';
+      if (comm.charAt(0) === '~') {
+        comm = comm.slice(1);
+        if (commands[comm]) {
+          if (typeof commands[comm] === 'string') {
+            if (commands[comm].match(/\{args\}/)) {
+              out = commands[comm].replace(/\{args\}/g, next);
+            } else {
+              out = commands[comm] + ' ' + next;
+            }
+          } else if (typeof commands[comm] === 'function') {
+            out = commands[comm](new Input(next, input.user, input.auth));
+            if (out instanceof Promise) {
+              out.then(function(result) {
+                if (Array.isArray(result)) {
+                  result = result.join('\n');
+                }
+                resolve(result);
+              });
+              return;
+            } else if (Array.isArray(out)) {
+              out = out.join('\n');
+            }
+          } else if (typeof commands[comm] === 'object') {
+            if (commands[comm].perm) {
+              if (input.auth) {
+                if (commands[comm].perm > perms.getPermLevel(input.user)) {
+                  reject(new Error('no permission for command ' + comm));
+                  return;
+                }
+              } else {
+                reject(new Error('no permission for command ' + comm));
+                return;
+              }
+            }
+
+            out = commands[comm].f(new Input(next, input.user, input.auth));
+            if (out instanceof Promise) {
+              out.then(function(result) {
+                if (Array.isArray(result)) {
+                  result = result.join('\n');
+                }
+                resolve(result);
+              });
+              return;
+            } else if (Array.isArray(out)) {
+              out = out.join('\n');
+            }
+          }
+        } else {
+          reject(new Error('no command ' + comm));
           return;
         }
-        loadAO(addon);
-        console.info('loaded ' + file);
-      });
-    }
-  });
-  loadAO(perms);
-  loadAO(help);
-}
-
-function startHTTPServ() {
-  httpServer = http.createServer(function(request, response) {
-    if (request.method === 'POST') {
-      // Get POST body
-      var reqBody = '';
-
-      request.on('data', function(data) {
-        reqBody += data;
-      }).on('end', function() {
-        /**
-         * Callback if success
-         */
-        function success(data, out) {
-          if (!out) {
-            out = {};
-          }
-          response.writeHead(200, {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
-            'Server': 'secret_bot'
-          });
-          out.status = 'success';
-          out.data = data;
-          response.end(JSON.stringify(out));
-        }
-        /**
-         * Callback if failed
-         */
-        function error(data, out) {
-          if (!out) {
-            out = {};
-          }
-          response.writeHead(400, {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
-            'Server': 'secret_bot'
-          });
-          out.status = 'error';
-          out.error = data;
-          response.end(JSON.stringify(out));
-        }
-
-        var input = JSON.parse(reqBody);
-
-        if (input.text) {
-          input.args = input.text.split(' ');
-        }
-        if (!input.user) {
-          input.user = 'no-user';
-        }
-        // Attach functions to input object
-        input.processText = processText;
-        input.getText = getText;
-        // Let's go
-        if (!input.type || input.type === 'text') {
-          console.log(input.user + ': ' + input.args.join(' '));
-          try {
-            getText(input, success, error);
-          } catch (e) {
-            console.error(e);
-            error([
-              'error occured: ' + e.message,
-              'this error has been logged'
-            ]);
-            //TODO: Actually log the error
-          }
-        } else if (input.type === 'greet') {
-          input.args = ['~greet'].concat([input.user]);
-
-          getText(input, function(out) {
-            if (out[0] === 'no greeting for ' + input.args[0]) {
-              error(['no greeting']);
-            } else {
-              success(out);
-            }
-          }, error);
-        }
-      });
-    } else {
-      response.writeHead(405, {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json',
-        'Server': 'secret_bot'
-      });
-      response.end(JSON.stringify(['requests must use POST']));
-    }
-  }).listen(25567, '127.0.0.1');
-  console.log('Server running at http://127.0.0.1:25567/');
-}
-
-// TODO: add greeting replier
-
-function getText(input, success, error) {
-  var reply = [];
-  var extraProperties = {};
-
-  if (input.args) {
-    input.args[0] = input.args[0].substring(1);
-    var handler = commandHandlers[input.args[0]];
-    if (handler) {
-      // Do perms stuff here
-      if (input.user) {
-        var permLevel = perms.getPermLevel(input.user, input.key);
-        if (typeof handler === 'object') {
-          if (handler.perm) {
-            if (permLevel < handler.perm) {
-              error(['insufficient permission level']);
-            }
-          }
-        }
       } else {
-        if (typeof handler === 'object') {
-          if (handler.perm) {
-            if (0 < handler.perm) {
-              error(['insufficient permission level']);
-            }
-          }
+        if (next) {
+          out = comm + ' ' + next;
+        } else {
+          out = comm;
         }
       }
-      input.args.splice(0, 1);
-      var result;
-      if (typeof handler === 'function') {
-        result = handler(input);
-      } else if (typeof handler === 'object') {
-        result = handler.f(input);
-        if (handler.private) {
-          extraProperties.private = true;
-        }
-      }
-      if (result) {
-        reply = result;
-      }
-    } else {
-      var res;
-      defautHandlers.forEach(function(h) {
-        if (!res) {
-          res = h(input);
-        }
-      });
-      if (res) {
-        reply = res;
-      }
-    }
-  }
 
-  if (reply.length) {
-    success(reply, extraProperties);
-  } else {
-    error(['command ' + input.args[0] + ' does not exist']);
-  }
+      resolve(out);
+    }, reject);
+  });
 }
 
-function processText(input) {
-  if (input.args.length === 0) {
-    return '';
-  }
-
-  var words = input.args;
-  var str = '';
-
-  var retIndex = words.indexOf('~return');
-  if (retIndex > -1) {
-    words.splice(retIndex);
-  }
-
-  var breakIndex = words.indexOf('~break');
-  if (breakIndex > -1) {
-
-    var second = words.splice(breakIndex + 1, words.length); // second arg doesn't matter, as it'll just take all the end elements
-    words.splice(breakIndex, 1);
-
-    input.args = words;
-    var part1 = processText(input);
-    input.args = second;
-    var part2 = processText(input);
-    str = part1 + ' ' + part2;
-
-    return str;
-  }
-
-  for (var i = 0; i < words.length; i++) {
-    // Add a space between words
-    if (i > 0)
-      str += ' ';
-    // If it's a command
-    if (words[i].charAt(0) === '~' || words[i].charAt(0) === '`') {
-      // Split into new arguments
-      var oldArgs = words;
-      input.args = words.splice(i);
-      // Get the result, and add it on
-      var temp = getText(input);
-      console.log(typeof temp);
-      var newString = temp.join(' ');
-      //var newString = getText(input).join(' ');
-      input.args = words;
-      str += newString;
-      break;
-    } else
-    // Just add the string
-      str += words[i];
-  }
-
-  return str;
-}
-
-loadAddons();
-startHTTPServ();
+var ready = reloadAddons();
 
 module.exports = {
-  processText: processText
+  getText: getText,
+  Input: Input,
+  ready: ready
 };
