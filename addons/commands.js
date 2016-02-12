@@ -35,6 +35,15 @@ function say(input) {
   return input.text;
 }
 
+function getWho(input) {
+  return input.user;
+}
+
+function exec(input) {
+  var f = new Function(input.text);
+  return f();
+}
+
 function getSource(input) {
   if (input.text) {
     // Link to a file
@@ -293,7 +302,13 @@ var functions = {
   'roll': {
     f: getRoll,
     help: rollHelp
-  }
+  },
+  'eval': {
+    f: exec,
+    perm: 10
+  },
+  'who': getWho,
+  'me': getWho
 };
 
 module.exports = {
