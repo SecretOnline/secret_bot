@@ -2,6 +2,7 @@
   "hype": "choo choo",
   "HYPE": "ALL ABOARD! CHOO CHOO",
   "groot": "http://i.imgur.com/LRA0MMT.gif",
+  "doot":"http://i.imgur.com/xm2bLgu.png",
   "soon": "June™",
   "mindblow": "http://i.imgur.com/8pTSVjV.gif",
   "sips": "the real guy, the best guy",
@@ -23,5 +24,6 @@
   "baah": "a-space-goat",
   "burn": "{args} is now on fire",
   "extinguish": "{args} is no longer on fire",
-  "source":"https://github.com/SecretOnline/secret_bot"
+  "source":"https://github.com/SecretOnline/secret_bot",
+  "projects": "https://secretonline.github.io/"
 }
