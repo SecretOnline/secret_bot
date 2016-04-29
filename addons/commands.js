@@ -111,7 +111,7 @@ function getSearchLink(input) {
 }
 
 function getInfoLink(input) {
-  var url = 'https://secretonline.github.io/NMS-Info/';
+  var url = 'https://repo.nmsdb.info/';
   if (input.text)
     url += '?search=' + input.text;
   url = url.replace(/ /g, '+');

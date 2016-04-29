@@ -9,7 +9,8 @@
   "faq": "https://www.reddit.com/r/NoMansSkyTheGame/wiki/faq",
   "archive": "https://www.reddit.com/r/NoMansSkyTheGame/wiki/archive",
   "rules": "https://www.reddit.com/r/NoMansSkyTheGame/wiki/rules",
-  "countdown": "https://secretonline.github.io/NMS-Countdown",
+  "traffic": "https://en.reddit.com/r/NoMansSkyTheGame/about/traffic",
+  "countdown": "https://countdown.nmsdb.info",
   "planetreport": "https://secretonline.github.io/NMS-Report",
   "rip": "rip in peace,",
   "hundreds": "hundreds, if not thousands, of",
@@ -25,5 +26,10 @@
   "burn": "{args} is now on fire",
   "extinguish": "{args} is no longer on fire",
   "source":"https://github.com/SecretOnline/secret_bot",
-  "projects": "https://secretonline.github.io/"
+  "projects": "https://secretonline.github.io/",
+  "this": "http://i.imgur.com/znQUxit.png",
+  "that": "http://i.imgur.com/WEQh5Ei.png",
+  "blob": "https://i.imgur.com/Bdxgbam.gifv",
+  "balariv": "http://i.imgur.com/TLrMqab.gifv",
+  "islove": "{args} is love, {args} is life"
 }
