@@ -83,7 +83,7 @@ function getTrivia(input) {
 
 function getPoints(input) {
   if (input.args.length) {
-    var name = input.args.join(' ');
+    var name = input.args.join(' ').toLowerCase();
     if (points[name]) {
       return name + ' has ' + points[name] + ' points';
     } else {
