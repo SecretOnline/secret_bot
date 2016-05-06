@@ -53,14 +53,14 @@ function reloadAddons() {
      */
     function loadAddon(name) {
       return new Promise(function(res2, rej2) {
-        name = './addons/' + name;
+        name = `./addons/${name}`;
         var ext = name.split('.').pop();
         var mod, obj, keys;
         if (ext === 'json') {
           try {
             obj = require.main.require(name);
           } catch (e) {
-            console.error('error while require-ing ' + name + '. continuing');
+            console.error(`error while require-ing ${name}. continuing`);
             console.error(e);
             console.error(e.stack);
             res2();
@@ -72,13 +72,13 @@ function reloadAddons() {
             commands[key] = obj[key];
           });
 
-          console.log('loaded ' + name);
+          console.log(`loaded ${name}`);
           res2();
         } else if (ext === 'js') {
           try {
             mod = require.main.require(name);
           } catch (e) {
-            console.error('error while require-ing ' + name + '. continuing');
+            console.error(`error while require-ing ${name}. continuing`);
             console.error(e);
             console.error(e.stack);
             res2();
@@ -97,9 +97,9 @@ function reloadAddons() {
           });
           res2();
 
-          console.log('loaded ' + name);
+          console.log(`loaded ${name}`);
         } else {
-          console.log('ignoring ' + name);
+          console.log(`ignoring ${name}`);
           res2();
         }
 

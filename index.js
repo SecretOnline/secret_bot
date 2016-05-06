@@ -37,14 +37,14 @@ bot.ready
               if (match[1] === '@') {
                 // Replace user
                 var nick = message.channel.server.members.get('id', match[2]).username;
-                text = text.replace(match[0], '@' + nick);
+                text = text.replace(match[0], `@${nick}`);
               } else if (match[1] === '#') {
                 // replace channel
                 var chan = message.channel.server.channels.get('id', match[2]).name;
-                text = text.replace(match[0], '#' + chan);
+                text = text.replace(match[0], `#${chan}`);
               }
             } catch (e) {
-              console.error('[ERROR]: Unable to perform replacement operation on ' + match[0]);
+              console.error(`[ERROR]: Unable to perform replacement operation on ${match[0]}`);
               console.error(e);
             }
           }
