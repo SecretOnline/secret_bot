@@ -64,6 +64,15 @@ function reloadAddons() {
         name = `./addons/${name}`;
         var ext = name.split('.').pop();
         var mod, obj, keys;
+
+        try {
+          delete require.cache[require.resolve(name)];
+        } catch (e) {
+          console.error(`couldn't remove ${name} from require cache`);
+        } finally {
+
+        }
+
         if (ext === 'json') {
           try {
             obj = require.main.require(name);
@@ -103,17 +112,12 @@ function reloadAddons() {
               }
             }
           });
-          res2();
-
           console.log(`loaded ${name}`);
+          res2();
         } else {
           console.log(`ignoring ${name}`);
           res2();
         }
-
-        commands.help = help.commands.help;
-        help.registerHelp('help', help.commands.help.help);
-        help.registerHelp('_default', help.commands.help.help);
       });
     }
 
@@ -130,10 +134,23 @@ function reloadAddons() {
         proms.push(loadAddon(item));
       });
 
-      Promise.all(proms).then(resolve, function(err) {
-        reject(err);
-      });
+      Promise.all(proms).then(() => {
+
+        commands.help = help.commands.help;
+        help.registerHelp('help', help.commands.help.help);
+        help.registerHelp('_default', help.commands.help.help);
+
+        commands.reload = {
+          f: reloadAddons,
+          perm: 10
+        };
+
+        resolve(`reloaded. ${proms.length} addons, ${Object.keys(commands).length} commands`);
+      }, reject);
     });
+
+
+
   });
 }
 

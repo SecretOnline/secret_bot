@@ -24,7 +24,7 @@ module.exports = {
   commands: {
     getid: {
       f: getId,
-      perm: 5
+      perm: 1
     },
     random: randomPick,
     range: {
