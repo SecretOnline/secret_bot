@@ -1,6 +1,7 @@
 /* jslint node: true, esversion: 6 */
 'use strict';
 var bot = require('./bot.js');
+var perms = require('./perms.js');
 var Discord = require('discord.js');
 var config = require('./config.json');
 
@@ -50,8 +51,15 @@ bot.ready
           }
 
           // Send to bot
-          if (text.charAt(0) === '~') {
-            var inp = new bot.Input(text, message.author.name, false);
+          var rgx = /^~/;
+          // var rgx = /^(?:<@177875572880310273>|~)/;
+          if (text.match(rgx)) {
+            var usrObj = {
+              name: message.author.name,
+              id: message.author.id
+            };
+            var perm = perms.get(usrObj);
+            var inp = new bot.Input(text, usrObj, perm);
             var prom = bot.getText(inp);
             prom.then(function(res) {
               message.channel.send(res);

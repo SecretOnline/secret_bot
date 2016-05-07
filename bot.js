@@ -22,7 +22,7 @@ class Input {
     }
 
     this.u = user;
-    this.au = auth || false;
+    this.au = auth || 0;
   }
 
   get args() {
@@ -104,7 +104,6 @@ function reloadAddons() {
         }
 
         commands.help = help.commands.help;
-        commands.perms = perms.commands.perms;
         help.registerHelp('help', help.commands.help.help);
         help.registerHelp('_default', help.commands.help.help);
       });
@@ -171,7 +170,7 @@ function getText(input) {
           } else if (typeof commands[comm] === 'object') {
             if (commands[comm].perm) {
               if (input.auth) {
-                if (commands[comm].perm > perms.getPermLevel(input.user)) {
+                if (commands[comm].perm > input.auth) {
                   reject(new Error('no permission for command ' + comm));
                   return;
                 }
