@@ -40,6 +40,7 @@ function getWho(input) {
 }
 
 function exec(input) {
+  throw `no. bad ${input.user}. eval is evil`;
   var f = new Function(input.text);
   return f();
 }
