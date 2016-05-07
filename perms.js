@@ -11,7 +11,6 @@ fs.watch('data/perms.json', {}, (event, filename) => {
 function getPermLevel(user) {
   var id = user.id || user;
   if (perms[id]) {
-    console.log(perms[id]);
     return Math.max(0, perms[id]);
   } else {
     return 0;

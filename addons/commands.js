@@ -41,8 +41,8 @@ function getWho(input) {
 
 function exec(input) {
   throw `no. bad ${input.user}. eval is evil`;
-  var f = new Function(input.text);
-  return f();
+  // var f = new Function(input.text);
+  // return f();
 }
 
 function getSource(input) {
@@ -254,7 +254,7 @@ function toTitleCase(str) {
 var functions = {
   'say': {
     f: say,
-    perm: 10
+    perm: 5
   },
   'source': getSource,
   'wiki': {

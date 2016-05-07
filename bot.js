@@ -41,6 +41,14 @@ class Input {
     }
   }
 
+  get userID() {
+    if (this.u instanceof Object) {
+      return this.u.id;
+    } else {
+      return this.u;
+    }
+  }
+
   get auth() {
     return this.au;
   }

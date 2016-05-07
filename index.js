@@ -30,26 +30,6 @@ bot.ready
           var text = message.content;
           console.log(text);
 
-          // Test for raw user/channel mentions
-          var match;
-          var regex = /<([@#])(\d+)>/g;
-          while ((match = regex.exec(text)) !== null) {
-            try {
-              if (match[1] === '@') {
-                // Replace user
-                var nick = message.channel.server.members.get('id', match[2]).username;
-                text = text.replace(match[0], `@${nick}`);
-              } else if (match[1] === '#') {
-                // replace channel
-                var chan = message.channel.server.channels.get('id', match[2]).name;
-                text = text.replace(match[0], `#${chan}`);
-              }
-            } catch (e) {
-              console.error(`[ERROR]: Unable to perform replacement operation on ${match[0]}`);
-              console.error(e);
-            }
-          }
-
           // Send to bot
           var rgx = /^~/;
           // var rgx = /^(?:<@177875572880310273>|~)/;
