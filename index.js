@@ -5,7 +5,9 @@ var perms = require('./perms.js');
 var Discord = require('discord.js');
 var config = require('./config.json');
 
-var discord = new Discord.Client();
+var discord = new Discord.Client({
+  autoReconnect: true
+});
 
 bot.ready
   .catch((err) => {
@@ -29,6 +31,10 @@ bot.ready
         if (!message.content.match(/^\u200b/i)) {
           var text = message.content;
           console.log(text);
+
+          if (text.match(/^~(?:trivia|t|a) .*/) && message.channel.id !== config.special.trivia) {
+            return;
+          }
 
           // Send to bot
           var rgx = /^~/;
