@@ -140,6 +140,8 @@ function reloadAddons() {
         help.registerHelp('help', help.commands.help.help);
         help.registerHelp('_default', help.commands.help.help);
 
+        commands.commands = getCommandList;
+
         commands.reload = {
           f: reloadAddons,
           perm: 10
@@ -152,6 +154,52 @@ function reloadAddons() {
 
 
   });
+}
+
+function getCommandList(input) {
+  var list = [];
+  var keys = Object.keys(commands);
+
+  keys.forEach(function(key) {
+    var command = commands[key];
+    var type = typeof command;
+
+    if (type === 'string' || type === 'function') {
+      list.push(key);
+    } else if (type === 'object') {
+      if (command.perm) {
+        if (command.perm > input.auth) {
+          return;
+        } else {
+          list.push(key);
+        }
+      } else {
+        list.push(key);
+      }
+    } else {
+      return;
+    }
+  });
+
+  if (list.length) {
+    list.sort((a, b) => {
+      var al = a.toLowerCase();
+      var bl = b.toLowerCase();
+      if (al > bl) {
+        return 1;
+      } else if (al < bl) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
+    return [
+      `commands - ${list.length}`,
+      list.join(', ')
+    ];
+  } else {
+    return 'there are no commands in this bot';
+  }
 }
 
 function getText(input) {
