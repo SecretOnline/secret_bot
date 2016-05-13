@@ -58,6 +58,7 @@ function getTrivia(input) {
       if (skipUser !== input.user) {
         currQuestion = null;
         newQuestion();
+        skipUser = null;
         return [
           currQuestion.q,
           'reward: ' + currQuestion.points + ' points'
@@ -66,6 +67,7 @@ function getTrivia(input) {
         return 'nice try, ' + input.user;
       }
     } else {
+      skipUser = input.user;
       return [
         'skip requested',
         'another user must `~trivia skip` to confirm'
@@ -82,7 +84,7 @@ function getTrivia(input) {
 }
 
 function getPoints(input) {
-  if (input.args.length) {
+  if (input.args[0]) {
     var name = input.args.join(' ').toLowerCase();
     if (points[name]) {
       return name + ' has ' + points[name] + ' points';
@@ -97,7 +99,7 @@ function getPoints(input) {
     var ret = [];
     ret.push('top 5 scores');
     for (var i = 0; i < Math.min(keys.length, 5); i++) {
-      ret.push((i + 1) + '. ' + keys[0] + ': ' + points[keys[0]]);
+      ret.push(`${(i + 1)}. ${keys[0]}: ${points[keys[0]]}`);
     }
     return ret;
   }
@@ -114,15 +116,15 @@ function answer(input) {
     var guesses = currQuestion.guesses;
     currQuestion = null;
     return [
-      input.user + ' guessed correctly!',
-      'they have been awarded ' + newPoints + ' points',
-      'it took ' + guesses + ' guesses to get this one right'
+      `${input.user} guessed correctly!`,
+      `they have been awarded ${newPoints} points`,
+      `it took ${guesses} guesses to get this one right`
     ];
   }
 
   function failure(input) {
     return [
-      'incorrect guess, ' + input.user
+      `incorrect guess, ${input.user}`
     ];
   }
 
@@ -153,10 +155,10 @@ function answer(input) {
         }
       }
     } else {
-      return ['there is no active question. '];
+      return 'there is no active question.';
     }
   } else {
-    return ['answer attempt ignored; no user given'];
+    return 'answer attempt ignored; no user given';
   }
 }
 
@@ -167,7 +169,7 @@ function cheat(input) {
     newQuestion();
     return [
       'wait, cheating? who would even think of doing such a thing?',
-      'oh, ' + input.user + '. that\'s who',
+      `oh, ${input.user}. that\'s who`,
       'a new question has been picked:',
       currQuestion.q
     ];
