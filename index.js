@@ -5,21 +5,23 @@ var perms = require('./perms.js');
 var Discord = require('discord.js');
 var config = require('./config.json');
 
-var discord = new Discord.Client({
-  autoReconnect: true
-});
+var discord = new Discord.Client();
+
+function doLogin() {
+  return new Promise((resolve, reject) => {
+    discord.loginWithToken(config.discord.token, config.discord.email, config.discord.pass)
+      .then(resolve);
+  });
+}
+
+discord.on('disconnected', doLogin);
 
 bot.ready
   .catch((err) => {
     console.error('[ERR] Bot didn\'t start up properly :(');
     console.error(err);
   })
-  .then(() => {
-    return new Promise((resolve, reject) => {
-      discord.loginWithToken(config.discord.token, config.discord.email, config.discord.pass)
-        .then(resolve);
-    });
-  })
+  .then(doLogin)
   .catch((err) => {
     console.error('[ERR] Discord didn\'t start properly');
     console.error(err);
