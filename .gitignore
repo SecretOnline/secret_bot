@@ -1,4 +1,5 @@
 test.*
 data/
+audio/
 config.json
 node_modules/
