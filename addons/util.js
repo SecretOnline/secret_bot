@@ -20,6 +20,30 @@ function getRange(input) {
   return ret;
 }
 
+function reverse(input) {
+  return input.args.reverse().join(' ');
+}
+
+function getGrep(input) {
+  var rgx = new RegExp(input.args[0]);
+  var results = [];
+  input.args.shift();
+  input.args.forEach(function(val) {
+    if (rgx.test(val)) {
+      results.push(val);
+    }
+  });
+  return results;
+}
+
+function getMatch(input) {
+  var rgx = new RegExp(input.args[0], 'g');
+  input.args.shift();
+  var testString = input.args.join(' ');
+  var res = testString.match(rgx);
+  return res.join(' ');
+}
+
 module.exports = {
   commands: {
     getid: {
@@ -30,6 +54,9 @@ module.exports = {
     range: {
       f: getRange,
       perm: 5
-    }
+    },
+    grep: getGrep,
+    match: getMatch,
+    reverse: reverse
   }
 };
