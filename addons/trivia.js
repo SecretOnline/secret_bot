@@ -15,6 +15,7 @@ try {
   savePoints();
 }
 var currQuestion;
+var currIndex;
 var timeout;
 var skipUser;
 
@@ -94,12 +95,12 @@ function getPoints(input) {
   } else {
     var keys = Object.keys(points);
     keys.sort(function(a, b) {
-      return points[a] - points[b];
+      return points[b] - points[a];
     });
     var ret = [];
     ret.push('top 5 scores');
     for (var i = 0; i < Math.min(keys.length, 5); i++) {
-      ret.push(`${(i + 1)}. ${keys[0]}: ${points[keys[0]]}`);
+      ret.push(`${(i + 1)}. ${keys[i]}: ${points[keys[i]]}`);
     }
     return ret;
   }
@@ -181,11 +182,19 @@ function savePoints() {
 }
 
 function newQuestion() {
-  currQuestion = {};
-  var index = Math.floor(Math.random() * trivia.length);
-  currQuestion.q = trivia[index].q;
-  currQuestion.a = trivia[index].a;
-  currQuestion.points = trivia[index].points || 5;
+  skipUser = undefined;
+  var index;
+  if (typeof currIndex !== 'undefined') {
+    index = Math.floor(Math.random() * (trivia.length - 1));
+    if (index >= currIndex) {
+      index++;
+    }
+  } else {
+    index = Math.floor(Math.random() * trivia.length);
+  }
+  currIndex = index;
+  currQuestion = trivia[currIndex];
+  currQuestion.points = currQuestion.points || 5;
   currQuestion.guesses = 0;
   currQuestion.startTime = Date.now();
 }
