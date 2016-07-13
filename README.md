@@ -1,3 +1,7 @@
+#This project has moved!
+
+##You can now find it at [SecretOnline/bot](https://github.com/SecretOnline/bot)
+
 #secret_bot
 
 ---
